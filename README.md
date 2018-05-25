@@ -1,10 +1,10 @@
 # forked-daapd-volume-setter
 Set the volume of several airplay speakers individually
 
-Forked-Daapd supports output to several shairplay-sync receivers. The regular version permits setting the volume for all speakers at once, the iOS "Remote App" can set the volume indivdually. To access this from the command line I needed a little helper tool.
+Forked-daapd supports output to several shairplay speakers. To set the volume of each speaker fro mthe command-line this helper tool is useful.
 
-#Usage
+Usage
+-----
+The speakers name is `Audio-1` and the desired volume is 60:
 
-  python /home/tom/bin/output.py "Audio-1" 60
-  
-  Where "Audio-1" is the name of the speaker and 60 is the desired volume.
+    python /home/tom/bin/output.py "Audio-1" 60
