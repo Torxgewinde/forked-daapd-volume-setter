@@ -1,7 +1,7 @@
 # forked-daapd-volume-setter
 Set the volume of several airplay speakers individually
 
-Forked-daapd supports output to several shairplay speakers. To set the volume of each speaker fro mthe command-line this helper tool is useful.
+Forked-daapd supports output to several shairplay speakers. To set the volume of each speaker from the command-line this helper tool is useful.
 
 Install
 -------
