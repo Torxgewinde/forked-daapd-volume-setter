@@ -11,33 +11,56 @@
 ###############################################################################
 
 HOST="forked-daapd.server.lan"
-OUTPUTS="Audio-1 Audio-2 Computer"
+NETWORK_OUTPUTS="Audio-1 Audio-2"
+LOCAL_OUTPUTS="Computer"
+
+function set_volume() {
+        if [ $# -ne 1 ]; then
+                echo "Call this function with the output as parameter"
+                return 1
+        fi
+
+         # ensure our outputs are enabled al the time
+        mpc -h "$HOST" enable "$i" > /dev/null
+
+        THIS_INFO=$(python /home/pi/bin/output.py "$i")
+        THIS_VOL=$(echo "$THIS_INFO" | grep outputvolume | sed -e "s/[^0-9]*\([0-9]*\)/\1/g")
+        THIS_ENABLE=$(echo "$THIS_INFO" | grep outputenabled | sed -e "s/[^0-9]*\([0-9]*\)/\1/g")
+
+        if [ "$THIS_ENABLE" != "1" ]; then
+                echo "output not be enabled. Skipping..."
+                continue
+        fi
+
+        if [ "$VOL" != "$THIS_VOL" ]; then
+                python /home/pi/bin/output.py "$i" "$VOL"
+        fi
+}
 
 function task() {
-	# get current volume
-	VOL=$(mpc -h "$HOST" volume | sed -e "s/[^0-9]*\([0-9]*\).*/\1/g")
+        # get current volume
+        VOL=$(mpc -h "$HOST" volume | sed -e "s/[^0-9]*\([0-9]*\).*/\1/g")
 
-	echo "Master volume is: $VOL percent"
-	
-	for i in $OUTPUTS; do
-		# ensure our outputs are enabled al the time
-		mpc -h "$HOST" enable "$i" > /dev/null
+        echo "Master volume is: $VOL percent"
 
-		THIS_INFO=$(python output.py "$i")
-		THIS_VOL=$(echo "$THIS_INFO" | grep outputvolume | sed -e "s/[^0-9]*\([0-9]*\)/\1/g")
-		THIS_ENABLE=$(echo "$THIS_INFO" | grep outputenabled | sed -e "s/[^0-9]*\([0-9]*\)/\1/g")
+        # iterate over all networked outputs
+        for i in $NETWORK_OUTPUTS; do
+                #is the audio receiver online? Skip this audio-receiver if it is not responding to ping
+                ping -c 1 "$i" > /dev/null
+                if [ $? -ne 0 ]; then
+                        echo "output is not responding to ping, Skipping..."
+                        continue
+                fi
 
-		if [ "$THIS_ENABLE" != "1" ]; then
-			echo "output not be enabled, seems to be offline. Skipping..."
-			continue
-		fi
+                set_volume "$i"
+        done
 
-		if [ "$VOL" != "$THIS_VOL" ]; then
-			python output.py "$i" "$VOL"
-		fi
-	done
+        #iterate over all local outputs
+        for i in $LOCAL_OUTPUTS; do
+                set_volume "$i"
+        done
 
-	sleep 5
+        sleep 5
 }
 
 # run the function task more or less as a daemon (detached from the console etc.)
